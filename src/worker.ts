@@ -28,5 +28,15 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		return new Response('Hello World!');
+		/*
+    overview of how this will work:
+		- currently will configure blueprint and root node (root node being the root of github projects) in env variables, find a way to make this more dynamic
+		- use cron to run this worker every x minutes (5 minutes?)
+		- worker will fetch all direct descendants of root node and check if they have a linked github repo
+		- if they do, it will get all the descendancts of that node and check if they have a linked github issue
+		- if they do, get descendants and sync with description and sync title? (not sure about this due to large number of characters in title)
+		- if they don't, create a new issue with the title of the node and the description of the descendants
+		- check the issues to see if there are any that are not linked to a node and create a new node with the title of the issue
+		**/
 	},
 };
