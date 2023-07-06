@@ -53,10 +53,10 @@ const BlueprintSchema = z.object({
 							args: z
 								.array(
 									z.object({
-										blocked_until: z.nullable(z.number()),
+										blocked_until: z.nullable(z.number()).optional(),
 										completed: z.nullable(z.boolean()),
 										created_at: z.nullable(z.number()),
-										external_id: z.nullable(z.string()),
+										external_id: z.nullable(z.string()).optional(),
 										href: z.optional(z.string()), // not necessarily a url
 										idx_at_create: z.number().optional(),
 										name: z.string(),
@@ -224,6 +224,57 @@ const getChildNodes = (blueprint: z.infer<typeof BlueprintSchema>, task_id: stri
 	});
 
 	return nodes;
+};
+
+const createNode = async (blueprint: z.infer<typeof BlueprintSchema>, parent_id: string, task_name: string, task_href: string) => {
+	// create a new task with the task_name and href
+	// add an edge between the parent and the new task
+
+	const blueprintId = ''; // TODO: get blueprint id from env
+
+	const id = crypto.randomUUID();
+
+	return fetch(`https://thinkdivergent.com/api/profile/v1/blueprint/${blueprintId}/t/`, {
+		method: 'POST',
+		body: JSON.stringify({
+			base_rev: blueprint.revisions[0]?.r,
+			operations: [
+				{
+					user_id: 'DEFAULT_USER',
+					type: 'AT',
+					args: [
+						{
+							name: task_name,
+							completed: false,
+							created_at: +Date.now(),
+							idx_at_create: 0,
+							// generate task id (uuid)
+							task_id: id,
+						},
+					],
+				},
+				{
+					user_id: 'DEFAULT_USER',
+					type: 'ASE',
+					args: [parent_id, id],
+				},
+				{
+					user_id: 'DEFAULT_USER',
+					type: 'UT',
+					args: [
+						{
+							task_id: id,
+							href: task_href,
+							completed: false,
+							created_at: +Date.now(),
+							idx_at_create: 0,
+							name: task_name,
+						},
+					],
+				},
+			] satisfies z.infer<typeof BlueprintSchema>['revisions'][number]['data']['operations'],
+		}),
+	});
 };
 
 const githubLinkNodes = getNodesWithGithubLinks(blueprint);
